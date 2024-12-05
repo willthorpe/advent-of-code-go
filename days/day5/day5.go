@@ -61,20 +61,20 @@ func (d *Day) Run() (int, int) {
 
 		if !pass {
 			sp := strings.Split(page, ",")
-			var pageLeftInRuleCount []int
+			var pagesFirstInRule []int
 
 			for _, p := range sp {
-				countInFirstPosition := 0
+				countTimesPageFirstInRule := 0
 				for _, rule := range rulesThatApply {
 					if rule[0] == p {
-						countInFirstPosition++
+						countTimesPageFirstInRule++
 					}
 				}
 
-				pageLeftInRuleCount = append(pageLeftInRuleCount, countInFirstPosition)
+				pagesFirstInRule = append(pagesFirstInRule, countTimesPageFirstInRule)
 			}
 
-			medianIndex := slices.Index(pageLeftInRuleCount, slices.Min(pageLeftInRuleCount)+slices.Max(pageLeftInRuleCount)/2)
+			medianIndex := slices.Index(pagesFirstInRule, slices.Min(pagesFirstInRule)+slices.Max(pagesFirstInRule)/2)
 
 			d.solution2 += common.ConvertStringToInt(sp[medianIndex])
 		}
