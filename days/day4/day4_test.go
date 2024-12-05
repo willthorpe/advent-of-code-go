@@ -1,8 +1,8 @@
-package day1
+package day4
 
 import "testing"
 
-func TestDay1_Run(t *testing.T) {
+func TestDay4_Run(t *testing.T) {
 	tests := []struct {
 		name          string
 		input         []string
@@ -12,15 +12,19 @@ func TestDay1_Run(t *testing.T) {
 		{
 			name: "Example data",
 			input: []string{
-				"3   4",
-				"4   3",
-				"2   5",
-				"1   3",
-				"3   9",
-				"3   3",
+				"MMMSXXMASM",
+				"MSAMXMSMSA",
+				"AMXSXMAAMM",
+				"MSAMASMSMX",
+				"XMASAMXAMM",
+				"XXAMMXXAMA",
+				"SMSMSASXSS",
+				"SAXAMASAAA",
+				"MAMMMXMMMM",
+				"MXMXAXMASX",
 			},
-			wantSolution1: 11,
-			wantSolution2: 31,
+			wantSolution1: 18,
+			wantSolution2: 9,
 		},
 	}
 
