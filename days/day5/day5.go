@@ -1,7 +1,7 @@
 package day5
 
 import (
-	"advent-of-code-2024/days/common"
+	"advent-of-code-2024/days/common/utils"
 	"advent-of-code-2024/input"
 	"slices"
 	"strings"
@@ -56,7 +56,7 @@ func (d *Day) Run() (int, int) {
 
 		if pass {
 			sp := strings.Split(page, ",")
-			d.solution1 += common.ConvertStringToInt(sp[len(sp)/2])
+			d.solution1 += utils.ConvertStringToInt(sp[len(sp)/2])
 		}
 
 		if !pass {
@@ -76,7 +76,7 @@ func (d *Day) Run() (int, int) {
 
 			medianIndex := slices.Index(pagesFirstInRule, slices.Min(pagesFirstInRule)+slices.Max(pagesFirstInRule)/2)
 
-			d.solution2 += common.ConvertStringToInt(sp[medianIndex])
+			d.solution2 += utils.ConvertStringToInt(sp[medianIndex])
 		}
 	}
 

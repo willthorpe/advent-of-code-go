@@ -1,8 +1,9 @@
-package common
+package utils
 
 import (
 	"log"
 	"math"
+	"regexp"
 	"strconv"
 )
 
@@ -18,4 +19,15 @@ func ConvertStringToInt(s string) int {
 	}
 
 	return intValue
+}
+
+func FindPositionOfRegexInString(data string, regex string) (int, int) {
+	r := regexp.MustCompile(regex)
+	i := r.FindStringIndex(data)
+
+	if len(i) > 0 {
+		return i[0], i[1]
+	}
+
+	return -1, -1
 }

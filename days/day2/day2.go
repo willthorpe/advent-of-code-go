@@ -1,7 +1,7 @@
 package day2
 
 import (
-	"advent-of-code-2024/days/common"
+	"advent-of-code-2024/days/common/utils"
 	"advent-of-code-2024/input"
 	"slices"
 	"strings"
@@ -31,7 +31,7 @@ func (d *Day) Run() (int, int) {
 		intValues := make([]int, 0)
 
 		for _, value := range values {
-			intValues = append(intValues, common.ConvertStringToInt(value))
+			intValues = append(intValues, utils.ConvertStringToInt(value))
 		}
 
 		gaps, ordering := d.findGapsAndOrdering(intValues)
@@ -69,7 +69,7 @@ func (d *Day) findGapsAndOrdering(intValues []int) ([]int, []string) {
 
 	for index, value := range intValues {
 		if index > 0 {
-			gaps = append(gaps, common.Abs(value, intValues[index-1]))
+			gaps = append(gaps, utils.Abs(value, intValues[index-1]))
 
 			if value > intValues[index-1] {
 				ordering = append(ordering, "ASC")

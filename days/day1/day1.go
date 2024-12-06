@@ -1,7 +1,7 @@
 package day1
 
 import (
-	"advent-of-code-2024/days/common"
+	"advent-of-code-2024/days/common/utils"
 	"advent-of-code-2024/input"
 	"slices"
 	"strings"
@@ -29,7 +29,7 @@ func (d *Day) Run() (int, int) {
 	leftList, rightList := d.generateSortedLists()
 
 	for index, value := range leftList {
-		d.solution1 += common.Abs(value, rightList[index])
+		d.solution1 += utils.Abs(value, rightList[index])
 	}
 
 	for _, value := range leftList {
@@ -53,8 +53,8 @@ func (d *Day) generateSortedLists() ([]int, []int) {
 
 	for _, line := range d.data {
 		splitLine := strings.SplitAfter(line, "   ")
-		leftValue := common.ConvertStringToInt(strings.TrimSpace(splitLine[0]))
-		rightValue := common.ConvertStringToInt(strings.TrimSpace(splitLine[1]))
+		leftValue := utils.ConvertStringToInt(strings.TrimSpace(splitLine[0]))
+		rightValue := utils.ConvertStringToInt(strings.TrimSpace(splitLine[1]))
 
 		leftList = append(leftList, leftValue)
 		rightList = append(rightList, rightValue)

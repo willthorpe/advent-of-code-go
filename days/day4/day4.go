@@ -1,9 +1,9 @@
 package day4
 
 import (
+	"advent-of-code-2024/days/common/matrix"
 	"advent-of-code-2024/input"
 	"math"
-	"regexp"
 	"strings"
 )
 
@@ -26,40 +26,32 @@ func NewDay() *Day {
 }
 
 func (d *Day) Run() (int, int) {
-	var data [][]string
-
-	for _, row := range d.data {
-		splitRow := strings.Split(row, "")
-		data = append(data, splitRow)
-	}
+	data := matrix.Create(d.data)
 
 	for rowIndex, row := range data {
 		for columnIndex, _ := range row {
 			if data[rowIndex][columnIndex] == "X" {
 				indexOfX := columnIndex
-				d.searchMasLeftToRight(row, indexOfX)
-				d.searchMasRightToLeft(row, indexOfX)
+				d.searchMasLeft(row, indexOfX)
+				d.searchMasRight(row, indexOfX)
 
-				var column []string
-				for _, da := range data {
-					column = append(column, da[columnIndex])
-				}
-				d.searchMasLeftToRight(column, rowIndex)
-				d.searchMasRightToLeft(column, rowIndex)
+				transposedColumn := matrix.TransposeColumn(data, columnIndex)
+				d.searchMasLeft(transposedColumn, rowIndex)
+				d.searchMasRight(transposedColumn, rowIndex)
 
-				diagonalLR := d.createDiagonalLeftToRight(rowIndex, columnIndex, data)
+				diagonalLR := matrix.FindDiagonalForCoordinates(data, rowIndex, columnIndex)
 				indexOfXInDiagonal := int(math.Min(float64(rowIndex), float64(columnIndex)))
-				d.searchMasLeftToRight(diagonalLR, indexOfXInDiagonal)
-				d.searchMasRightToLeft(diagonalLR, indexOfXInDiagonal)
+				d.searchMasLeft(diagonalLR, indexOfXInDiagonal)
+				d.searchMasRight(diagonalLR, indexOfXInDiagonal)
 
-				diagonalRL := d.createDiagonalRightToLeft(rowIndex, columnIndex, data)
+				diagonalRL := matrix.FindAntidiagonalForCoordinates(data, rowIndex, columnIndex)
 				indexOfXInDiagonal = int(min(float64(len(data)-1), float64(rowIndex+columnIndex))) - columnIndex
-				d.searchMasLeftToRight(diagonalRL, indexOfXInDiagonal)
-				d.searchMasRightToLeft(diagonalRL, indexOfXInDiagonal)
+				d.searchMasLeft(diagonalRL, indexOfXInDiagonal)
+				d.searchMasRight(diagonalRL, indexOfXInDiagonal)
 			}
 
 			if data[rowIndex][columnIndex] == "A" {
-				diagonalLR := d.createDiagonalLeftToRight(rowIndex, columnIndex, data)
+				diagonalLR := matrix.FindDiagonalForCoordinates(data, rowIndex, columnIndex)
 				indexOfAInDiagonal := int(math.Min(float64(rowIndex), float64(columnIndex)))
 
 				if indexOfAInDiagonal == 0 || indexOfAInDiagonal == len(diagonalLR)-1 {
@@ -67,7 +59,7 @@ func (d *Day) Run() (int, int) {
 				}
 
 				if (diagonalLR[indexOfAInDiagonal-1] == "M" && diagonalLR[indexOfAInDiagonal+1] == "S") || (diagonalLR[indexOfAInDiagonal+1] == "M" && diagonalLR[indexOfAInDiagonal-1] == "S") {
-					diagonalRL := d.createDiagonalRightToLeft(rowIndex, columnIndex, data)
+					diagonalRL := matrix.FindAntidiagonalForCoordinates(data, rowIndex, columnIndex)
 					indexOfAInDiagonal = int(min(float64(len(data)-1), float64(rowIndex+columnIndex))) - columnIndex
 
 					if (diagonalRL[indexOfAInDiagonal-1] == "M" && diagonalRL[indexOfAInDiagonal+1] == "S") || (diagonalRL[indexOfAInDiagonal+1] == "M" && diagonalRL[indexOfAInDiagonal-1] == "S") {
@@ -81,59 +73,19 @@ func (d *Day) Run() (int, int) {
 	return d.solution1, d.solution2
 }
 
-func (d *Day) createDiagonalLeftToRight(rowIndex int, columnIndex int, data [][]string) []string {
-	var diagonal []string
-	startRow := int(math.Max(float64(rowIndex)-float64(columnIndex), 0))
-	startColumn := int(math.Max(float64(columnIndex)-float64(rowIndex), 0))
-	minimumBoundary := int(math.Min(float64(len(data)), float64(len(data[0]))))
-	maximumStartingPosition := int(math.Max(float64(startRow), float64(startColumn)))
-	diagonalRange := minimumBoundary - maximumStartingPosition
+func (d *Day) searchMasLeft(data []string, endIndex int) {
+	_, foundIndex := matrix.SearchLeft(data, endIndex, "SAM$")
+	dataAsString := strings.Join(data[:endIndex], "")
 
-	for i := range diagonalRange {
-		diagonal = append(diagonal, data[startRow+i][startColumn+i])
-	}
-
-	return diagonal
-}
-
-func (d *Day) createDiagonalRightToLeft(rowIndex int, columnIndex int, data [][]string) []string {
-	var diagonal []string
-	c := rowIndex + columnIndex
-	column := int(math.Min(float64(c), float64(len(data)-1)))
-	row := c - column
-	stop := false
-
-	for column >= 0 && !stop {
-		rowLength := len(data[row])
-		diagonal = append(diagonal, data[row][column])
-
-		column -= 1
-		row += 1
-
-		if row == rowLength {
-			stop = true
-		}
-	}
-
-	return diagonal
-}
-
-func (d *Day) searchMasLeftToRight(data []string, startIndex int) {
-	dataAsString := strings.Join(data[startIndex+1:], "")
-	xmasR := regexp.MustCompile(`^MAS`)
-	xmasIndex := xmasR.FindStringIndex(dataAsString)
-
-	if len(xmasIndex) > 0 && xmasIndex[0] == 0 {
+	if foundIndex == len(dataAsString) {
 		d.solution1 += 1
 	}
 }
 
-func (d *Day) searchMasRightToLeft(data []string, endIndex int) {
-	dataAsString := strings.Join(data[:endIndex], "")
-	samxR := regexp.MustCompile(`SAM$`)
-	samxIndex := samxR.FindStringIndex(dataAsString)
+func (d *Day) searchMasRight(data []string, startIndex int) {
+	foundIndex, _ := matrix.SearchRight(data, startIndex, "^MAS")
 
-	if len(samxIndex) > 0 && samxIndex[1] == len(dataAsString) {
+	if foundIndex == 0 {
 		d.solution1 += 1
 	}
 }

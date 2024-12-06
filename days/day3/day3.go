@@ -1,7 +1,7 @@
 package day3
 
 import (
-	"advent-of-code-2024/days/common"
+	"advent-of-code-2024/days/common/utils"
 	"advent-of-code-2024/input"
 	"regexp"
 	"slices"
@@ -40,7 +40,7 @@ func (d *Day) Run() (int, int) {
 	dontIndexes := dontR.FindAllStringIndex(data, -1)
 
 	for _, m := range mulMatches {
-		d.solution1 += common.ConvertStringToInt(m[1]) * common.ConvertStringToInt(m[2])
+		d.solution1 += utils.ConvertStringToInt(m[1]) * utils.ConvertStringToInt(m[2])
 	}
 
 	enableMul := true
@@ -61,7 +61,7 @@ func (d *Day) Run() (int, int) {
 		mulIndex := slices.IndexFunc(mulIndexes, func(mul []int) bool { return mul[0] == index })
 
 		if enableMul && mulIndex != -1 {
-			d.solution2 += common.ConvertStringToInt(mulMatches[mulIndex][1]) * common.ConvertStringToInt(mulMatches[mulIndex][2])
+			d.solution2 += utils.ConvertStringToInt(mulMatches[mulIndex][1]) * utils.ConvertStringToInt(mulMatches[mulIndex][2])
 		}
 	}
 
