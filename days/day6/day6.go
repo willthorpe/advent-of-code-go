@@ -7,6 +7,8 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"sync"
+	"sync/atomic"
 )
 
 type Day struct {
@@ -42,30 +44,44 @@ func (d *Day) Run() (int, int) {
 		}
 	}
 
-	coordinatesVisited := d.findUniqueCoordinatesVisited(data, guardStartingRowPosition, guardStartingColumnPosition)
+	coordinatesVisited, _ := d.findUniqueCoordinatesVisited(data, guardStartingRowPosition, guardStartingColumnPosition)
 	d.solution1 = len(coordinatesVisited)
 
+	var count atomic.Uint64
+	var wg sync.WaitGroup
+
 	for _, coordinate := range coordinatesVisited {
-		splitCoordinate := strings.Split(coordinate, ",")
+		wg.Add(1)
+		go func() {
+			splitCoordinate := strings.Split(coordinate, ",")
 
-		rowIndex := utils.ConvertStringToInt(splitCoordinate[0])
-		colIndex := utils.ConvertStringToInt(splitCoordinate[1])
+			rowIndex := utils.ConvertStringToInt(splitCoordinate[0])
+			colIndex := utils.ConvertStringToInt(splitCoordinate[1])
 
-		testData := matrix.Create(d.data)
-		if rowIndex == guardStartingRowPosition && colIndex == guardStartingColumnPosition {
-			continue
-		}
+			testData := matrix.Create(d.data)
+			if rowIndex == guardStartingRowPosition && colIndex == guardStartingColumnPosition {
+				count.Add(0)
+				wg.Done()
+			}
 
-		testData[rowIndex][colIndex] = "O"
-		d.findUniqueCoordinatesVisited(testData, guardStartingRowPosition, guardStartingColumnPosition)
+			testData[rowIndex][colIndex] = "O"
+			_, result := d.findUniqueCoordinatesVisited(testData, guardStartingRowPosition, guardStartingColumnPosition)
+			count.Add(uint64(result))
+
+			wg.Done()
+		}()
 	}
+
+	wg.Wait()
+
+	d.solution2 = int(count.Load())
 
 	return d.solution1, d.solution2
 }
 
-func (d *Day) findUniqueCoordinatesVisited(data [][]string, guardRowPosition int, guardColumnPosition int) []string {
+func (d *Day) findUniqueCoordinatesVisited(data [][]string, guardRowPosition int, guardColumnPosition int) ([]string, int) {
 	var allCoordinatesVisited []string
-
+	isInfinite := false
 	finish := false
 
 	for !finish {
@@ -73,7 +89,8 @@ func (d *Day) findUniqueCoordinatesVisited(data [][]string, guardRowPosition int
 		finish = d.checkPositionOnBoundary(guardRowPosition, guardColumnPosition, data)
 
 		if !finish {
-			finish = d.isInfiniteLoop(allCoordinatesVisited, finish)
+			isInfinite = d.isInfiniteLoop(allCoordinatesVisited, finish)
+			finish = isInfinite
 		}
 
 		if !finish {
@@ -120,7 +137,12 @@ func (d *Day) findUniqueCoordinatesVisited(data [][]string, guardRowPosition int
 	}
 
 	slices.Sort(allCoordinatesVisited)
-	return slices.Compact(allCoordinatesVisited)
+
+	if isInfinite {
+		return slices.Compact(allCoordinatesVisited), 1
+	}
+
+	return slices.Compact(allCoordinatesVisited), 0
 }
 
 func (d *Day) isInfiniteLoop(allCoordinatesVisited []string, finish bool) bool {
@@ -133,7 +155,6 @@ func (d *Day) isInfiniteLoop(allCoordinatesVisited []string, finish bool) bool {
 	}
 
 	if countLastVisitedCoordinate > 4 || len(allCoordinatesVisited) > (len(d.data)*len(d.data[0])) {
-		d.solution2++
 		finish = true
 	}
 
