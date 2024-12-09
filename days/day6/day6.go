@@ -4,7 +4,6 @@ import (
 	"advent-of-code-2024/days/common/matrix"
 	"advent-of-code-2024/days/common/utils"
 	"advent-of-code-2024/input"
-	"log"
 	"slices"
 	"strconv"
 	"strings"
@@ -30,45 +29,47 @@ func NewDay() *Day {
 
 func (d *Day) Run() (int, int) {
 	data := matrix.Create(d.data)
-	coordinatesVisited := d.findUniqueCoordinatesVisited(data)
+	guardStartingRowPosition := 0
+	guardStartingColumnPosition := 0
+
+	for rowIndex, row := range data {
+		indexOfGuard := slices.IndexFunc(row, func(i string) bool { return i == "^" })
+		if indexOfGuard != -1 {
+			guardStartingRowPosition = rowIndex
+			guardStartingColumnPosition = indexOfGuard
+
+			break
+		}
+	}
+
+	coordinatesVisited := d.findUniqueCoordinatesVisited(data, guardStartingRowPosition, guardStartingColumnPosition)
 	d.solution1 = len(coordinatesVisited)
 
-	for index, coordinate := range coordinatesVisited {
-		log.Println(index, len(coordinatesVisited)-1)
+	for _, coordinate := range coordinatesVisited {
 		splitCoordinate := strings.Split(coordinate, ",")
 
 		rowIndex := utils.ConvertStringToInt(splitCoordinate[0])
 		colIndex := utils.ConvertStringToInt(splitCoordinate[1])
 
 		testData := matrix.Create(d.data)
-		if testData[rowIndex][colIndex] != "^" {
-			testData[rowIndex][colIndex] = "O"
-
-			d.findUniqueCoordinatesVisited(testData)
+		if rowIndex == guardStartingRowPosition && colIndex == guardStartingColumnPosition {
+			continue
 		}
+
+		testData[rowIndex][colIndex] = "O"
+		d.findUniqueCoordinatesVisited(testData, guardStartingRowPosition, guardStartingColumnPosition)
 	}
 
 	return d.solution1, d.solution2
 }
 
-func (d *Day) findUniqueCoordinatesVisited(data [][]string) []string {
-	var uniqueCoordinatesVisited []string
+func (d *Day) findUniqueCoordinatesVisited(data [][]string, guardRowPosition int, guardColumnPosition int) []string {
 	var allCoordinatesVisited []string
 
 	finish := false
 
 	for !finish {
-		guardRowPosition := 0
-		guardColumnPosition := 0
-		for rowIndex, row := range data {
-			indexOfGuard := slices.IndexFunc(row, func(i string) bool { return i == "^" || i == ">" || i == "v" || i == "<" })
-			if indexOfGuard != -1 {
-				guardRowPosition = rowIndex
-				guardColumnPosition = indexOfGuard
-			}
-		}
-
-		uniqueCoordinatesVisited, allCoordinatesVisited = d.addPositionToUniqueCoordinates(guardRowPosition, guardColumnPosition, uniqueCoordinatesVisited, allCoordinatesVisited)
+		allCoordinatesVisited = append(allCoordinatesVisited, strconv.Itoa(guardRowPosition)+","+strconv.Itoa(guardColumnPosition))
 		finish = d.checkPositionOnBoundary(guardRowPosition, guardColumnPosition, data)
 
 		if !finish {
@@ -82,8 +83,8 @@ func (d *Day) findUniqueCoordinatesVisited(data [][]string) []string {
 				if transposedColumn[guardRowPosition-1] == "#" || transposedColumn[guardRowPosition-1] == "O" {
 					data[guardRowPosition][guardColumnPosition] = ">"
 				} else {
-					data[guardRowPosition][guardColumnPosition] = "X"
 					data[guardRowPosition-1][guardColumnPosition] = "^"
+					guardRowPosition--
 				}
 			}
 
@@ -91,8 +92,8 @@ func (d *Day) findUniqueCoordinatesVisited(data [][]string) []string {
 				if data[guardRowPosition][guardColumnPosition+1] == "#" || data[guardRowPosition][guardColumnPosition+1] == "O" {
 					data[guardRowPosition][guardColumnPosition] = "v"
 				} else {
-					data[guardRowPosition][guardColumnPosition] = "X"
 					data[guardRowPosition][guardColumnPosition+1] = ">"
+					guardColumnPosition++
 				}
 			}
 
@@ -102,8 +103,8 @@ func (d *Day) findUniqueCoordinatesVisited(data [][]string) []string {
 				if transposedColumn[guardRowPosition+1] == "#" || transposedColumn[guardRowPosition+1] == "O" {
 					data[guardRowPosition][guardColumnPosition] = "<"
 				} else {
-					data[guardRowPosition][guardColumnPosition] = "X"
 					data[guardRowPosition+1][guardColumnPosition] = "v"
+					guardRowPosition++
 				}
 			}
 
@@ -111,14 +112,15 @@ func (d *Day) findUniqueCoordinatesVisited(data [][]string) []string {
 				if data[guardRowPosition][guardColumnPosition-1] == "#" || data[guardRowPosition][guardColumnPosition-1] == "O" {
 					data[guardRowPosition][guardColumnPosition] = "^"
 				} else {
-					data[guardRowPosition][guardColumnPosition] = "X"
 					data[guardRowPosition][guardColumnPosition-1] = "<"
+					guardColumnPosition--
 				}
 			}
 		}
 	}
 
-	return uniqueCoordinatesVisited
+	slices.Sort(allCoordinatesVisited)
+	return slices.Compact(allCoordinatesVisited)
 }
 
 func (d *Day) isInfiniteLoop(allCoordinatesVisited []string, finish bool) bool {
@@ -131,10 +133,10 @@ func (d *Day) isInfiniteLoop(allCoordinatesVisited []string, finish bool) bool {
 	}
 
 	if countLastVisitedCoordinate > 4 || len(allCoordinatesVisited) > (len(d.data)*len(d.data[0])) {
-		log.Println("infinite")
 		d.solution2++
 		finish = true
 	}
+
 	return finish
 }
 
@@ -144,16 +146,4 @@ func (d *Day) checkPositionOnBoundary(rowIndex int, columnIndex int, data [][]st
 	}
 
 	return false
-}
-
-func (d *Day) addPositionToUniqueCoordinates(rowIndex int, columnIndex int, uniqueCoordinatesVisited []string, allCoordinatesVisited []string) ([]string, []string) {
-	position := strconv.Itoa(rowIndex) + "," + strconv.Itoa(columnIndex)
-
-	if !slices.Contains(uniqueCoordinatesVisited, position) {
-		uniqueCoordinatesVisited = append(uniqueCoordinatesVisited, position)
-	}
-
-	allCoordinatesVisited = append(allCoordinatesVisited, position)
-
-	return uniqueCoordinatesVisited, allCoordinatesVisited
 }
